@@ -3,6 +3,7 @@ package cmd
 import (
     "gopkg.in/yaml.v2"
     "log"
+    "io"
     "path"
     "os"
     "io/ioutil"
@@ -14,6 +15,7 @@ type Config struct {
     Host string   `yaml:"host"`
     User string   `yaml:"user"`
     Domain string `yaml:"domain"`
+    Password string `yaml:"password"`
 }
 
 var configDir = "/home/max/.config/rdp-cli"
@@ -61,9 +63,31 @@ func Run(name string) {
         args = append(args, "-d", config.Domain)
     }
 
+    pass := ""
+    if config.Password != "" {
+        passArgs := []string{"lookup", config.Password, "password"}
+        passCmd := exec.Command("secret-tool", passArgs...)
+        output, err := passCmd.Output()
+        if err != nil {
+            log.Fatal(err)
+        }
+        pass = string(output)
+        args = append(args, "-p", "-")
+    }
+
     args = append(args, config.Host)
 
     cmd := exec.Command("rdesktop", args...)
+    if pass != "" {
+        stdin, err := cmd.StdinPipe()
+        if err != nil {
+            log.Fatal(err)
+        }
+        go func() {
+            defer stdin.Close()
+            io.WriteString(stdin, pass)
+        }()
+    }
     err = cmd.Run()
     if err != nil {
         log.Fatal(err)
