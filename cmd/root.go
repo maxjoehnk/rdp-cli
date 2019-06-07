@@ -9,6 +9,7 @@ import (
     "io/ioutil"
     "github.com/spf13/cobra"
     "os/exec"
+    "strings"
 )
 
 type Config struct {
@@ -16,6 +17,7 @@ type Config struct {
     User string   `yaml:"user"`
     Domain string `yaml:"domain"`
     Password string `yaml:"password"`
+    PasswordCommand string `yaml:"password-cmd"`
 }
 
 var configDir = "/home/max/.config/rdp-cli"
@@ -65,8 +67,12 @@ func Run(name string) {
 
     pass := ""
     if config.Password != "" {
-        passArgs := []string{"lookup", config.Password, "password"}
-        passCmd := exec.Command("secret-tool", passArgs...)
+        pass = config.Password
+        args = append(args, "-p", "-")
+    }else if config.PasswordCommand != "" {
+        passArgs := strings.Split(config.PasswordCommand, " ")
+
+        passCmd := exec.Command(passArgs[0], passArgs[1:]...)
         output, err := passCmd.Output()
         if err != nil {
             log.Fatal(err)
