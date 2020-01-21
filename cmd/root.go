@@ -55,7 +55,7 @@ func Run(name string) {
         log.Fatalf("error: %v", err)
     }
 
-    args := []string{"-k", "de", "-K", "-r", "clipboard:CLIPBOARD", "-g", "1920x1040"}
+    args := []string{"-k", "de", "-K", "-r", "clipboard:CLIPBOARD", "-r", "disk:share=/tmp/rdp"}
 
     if config.User != "" {
         args = append(args, "-u", config.User)
